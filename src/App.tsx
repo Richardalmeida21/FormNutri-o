@@ -25,9 +25,9 @@ function Nav() {
             ? 'bg-emerald-500/20 text-emerald-400'
             : 'text-gray-500 hover:text-gray-300'
         }`}
+        aria-label="Painel de resultados"
       >
         <LayoutDashboard size={15} />
-        Painel
       </Link>
     </nav>
   );

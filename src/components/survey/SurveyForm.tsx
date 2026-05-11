@@ -44,6 +44,15 @@ export function SurveyForm() {
   }
 
   async function handleSubmit() {
+    // Anti-spam: bloqueia nova submissão do mesmo browser por 1 hora
+    const SPAM_KEY = 'usf_survey_submitted_at';
+    const COOLDOWN = 60 * 60 * 1000; // 1h em ms
+    const last = localStorage.getItem(SPAM_KEY);
+    if (last && Date.now() - parseInt(last) < COOLDOWN) {
+      setStep('success'); // redireciona sem reenviar
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const payload: Omit<SurveyResponse, 'id' | 'created_at'> = {
@@ -61,6 +70,7 @@ export function SurveyForm() {
         q12: (answers[11] as string) ?? '',
       };
       await submitResponse(payload);
+      localStorage.setItem('usf_survey_submitted_at', String(Date.now()));
     } catch (e) {
       console.error('Erro ao enviar:', e);
     } finally {

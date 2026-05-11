@@ -6,10 +6,11 @@ import {
 } from 'recharts';
 import XLSXStyle from 'xlsx-js-style';
 import { jsPDF } from 'jspdf';
-import { fetchResponses } from '../../lib/supabase';
+import { fetchResponses, signOut, getSession } from '../../lib/supabase';
 import type { SurveyResponse } from '../../types/survey';
+import { DashboardLogin } from './DashboardLogin';
 import { questions } from '../../data/questions';
-import { Users, RefreshCw, Share2, BarChart2, Download, Calendar, LayoutList } from 'lucide-react';
+import { Users, RefreshCw, Share2, BarChart2, Download, Calendar, LayoutList, LogOut } from 'lucide-react';
 
 const COLORS = ['#10b981', '#14b8a6', '#6ee7b7', '#34d399', '#a7f3d0', '#059669', '#0d9488', '#5eead4'];
 
@@ -211,6 +212,17 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [viewMode, setViewMode] = useState<'charts' | 'text'>('charts');
+  const [authed, setAuthed] = useState<boolean | null>(null); // null = verificando
+
+  // Verifica sessão ao montar
+  useEffect(() => {
+    getSession().then(session => setAuthed(!!session));
+  }, []);
+
+  async function handleLogout() {
+    await signOut();
+    setAuthed(false);
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -225,7 +237,8 @@ export function Dashboard() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  // Só busca dados depois que a autenticação for confirmada
+  useEffect(() => { if (authed) load(); }, [load, authed]);
 
   function handleShare() {
     if (navigator.share) {
@@ -622,6 +635,20 @@ export function Dashboard() {
     },
   ];
 
+  // Guard: verificando sessão
+  if (authed === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-6 h-6 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  // Guard: não autenticado → tela de login
+  if (!authed) {
+    return <DashboardLogin onSuccess={() => setAuthed(true)} />;
+  }
+
   return (
     <div className="min-h-screen px-4 py-10 pb-24">
       {/* Header */}
@@ -668,6 +695,13 @@ export function Dashboard() {
             >
               <Share2 size={14} />
               Compartilhar
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-400 transition-all text-sm"
+            >
+              <LogOut size={14} />
+              Sair
             </button>
           </div>
         </div>
