@@ -10,7 +10,7 @@ import { fetchResponses, signOut, getSession } from '../../lib/supabase';
 import type { SurveyResponse } from '../../types/survey';
 import { DashboardLogin } from './DashboardLogin';
 import { questions } from '../../data/questions';
-import { Users, RefreshCw, Share2, BarChart2, Download, Calendar, LayoutList, LogOut } from 'lucide-react';
+import { Users, RefreshCw, Share2, BarChart2, Download, Calendar, LayoutList, LogOut, ChevronDown } from 'lucide-react';
 
 const COLORS = ['#10b981', '#14b8a6', '#6ee7b7', '#34d399', '#a7f3d0', '#059669', '#0d9488', '#5eead4'];
 
@@ -213,6 +213,7 @@ export function Dashboard() {
   const [error, setError] = useState('');
   const [viewMode, setViewMode] = useState<'charts' | 'text'>('charts');
   const [authed, setAuthed] = useState<boolean | null>(null); // null = verificando
+  const [exportOpen, setExportOpen] = useState(false);
 
   // Verifica sessão ao montar
   useEffect(() => {
@@ -650,58 +651,81 @@ export function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-10 pb-24">
+    <div className="min-h-screen px-4 pt-4 pb-24">
       {/* Header */}
-      <div className="max-w-6xl mx-auto mb-8">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-4">
-            <img src="/logo.png" alt="USF" className="h-12 w-auto object-contain" />
-            <div>
+      <div className="max-w-6xl mx-auto mb-4">
+        <div className="mb-4">
+          {/* Linha 1: logo + título */}
+          <div className="flex items-center gap-3 mb-3">
+            <img src="/logo.png" alt="USF" className="h-9 w-auto object-contain flex-shrink-0" />
+            <div className="min-w-0">
               <span className="text-[10px] font-bold tracking-[0.15em] text-emerald-400 uppercase">
                 Painel de Resultados
               </span>
-              <h1 className="text-2xl font-black text-white leading-tight">
-                Saúde, Estética &amp; Performance
+              <h1 className="text-base sm:text-2xl font-black text-white leading-tight">
+                Universidade São Francisco
               </h1>
-              <p className="text-gray-500 text-xs mt-0.5">Dados coletados em tempo real via Supabase</p>
             </div>
           </div>
 
-          <div className="flex gap-2 flex-wrap">
+          {/* Botões */}
+          <div className="flex items-center gap-1.5 flex-nowrap">
             <button
               onClick={load}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all text-sm"
+              title="Atualizar"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all text-sm whitespace-nowrap"
             >
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-              Atualizar
+              <span className="hidden sm:inline">Atualizar</span>
             </button>
-            <button
-              onClick={handleExportCSV}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all text-sm"
-            >
-              <Download size={14} />
-              Exportar Excel
-            </button>
-            <button
-              onClick={handleExportPDF}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all text-sm"
-            >
-              <Download size={14} />
-              Exportar PDF
-            </button>
+
+            {/* Dropdown Exportar */}
+            <div className="relative">
+              <button
+                onClick={() => setExportOpen(o => !o)}
+                title="Exportar"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all text-sm whitespace-nowrap"
+              >
+                <Download size={14} />
+                <span className="hidden sm:inline">Exportar</span>
+                <ChevronDown size={13} className={`transition-transform duration-200 ${exportOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {exportOpen && (
+                <div className="absolute left-0 top-full mt-1.5 z-50 min-w-[160px] rounded-xl bg-[#0d1520] border border-white/10 shadow-2xl overflow-hidden">
+                  <button
+                    onClick={() => { handleExportCSV(); setExportOpen(false); }}
+                    className="flex items-center gap-2.5 w-full px-4 py-3 text-sm text-white hover:bg-white/10 transition-all text-left"
+                  >
+                    <Download size={13} className="text-emerald-400" />
+                    Exportar Excel
+                  </button>
+                  <div className="h-px bg-white/5" />
+                  <button
+                    onClick={() => { handleExportPDF(); setExportOpen(false); }}
+                    className="flex items-center gap-2.5 w-full px-4 py-3 text-sm text-white hover:bg-white/10 transition-all text-left"
+                  >
+                    <Download size={13} className="text-teal-400" />
+                    Exportar PDF
+                  </button>
+                </div>
+              )}
+            </div>
+
             <button
               onClick={handleShare}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-all text-sm font-semibold"
+              title="Compartilhar"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-all text-sm font-semibold whitespace-nowrap"
             >
               <Share2 size={14} />
-              Compartilhar
+              <span className="hidden sm:inline">Compartilhar</span>
             </button>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-400 transition-all text-sm"
+              title="Sair"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-red-500/20 hover:border-red-500/30 hover:text-red-400 transition-all text-sm whitespace-nowrap"
             >
               <LogOut size={14} />
-              Sair
+              <span className="hidden sm:inline">Sair</span>
             </button>
           </div>
         </div>
